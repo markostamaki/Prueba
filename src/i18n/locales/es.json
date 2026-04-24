@@ -1,0 +1,181 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Añadir",
+    "search": "Buscar",
+    "actions": "Acciones",
+    "back": "Volver",
+    "confirm": "Confirmar",
+    "premium": "Premium",
+    "free_version": "Versión Gratuita",
+    "upgrade": "Actualizar a Premium",
+    "locked": "Bloqueado",
+    "coming_soon": "Próximamente"
+  },
+  "nav": {
+    "dashboard": "Panel de Control",
+    "properties": "Propiedades",
+    "expenses": "Gastos",
+    "maintenance": "Mantenimiento",
+    "membership": "Suscripción",
+    "settings": "Ajustes",
+    "profile": "Perfil",
+    "logout": "Cerrar Sesión"
+  },
+  "landing": {
+    "title": "Gestión Inmobiliaria de Élite Perfeccionada.",
+    "subtitle": "Gestione propiedades, automatice el mantenimiento y visualice gastos con nuestra solución SaaS mínima pero potente. Diseñada para propietarios profesionales.",
+    "cta": "Empiece a Gestionar Ahora",
+    "demo": "Ver Demo",
+    "features": {
+      "tracking": {
+        "title": "Seguimiento Seguro de Activos",
+        "desc": "Cada detalle de la propiedad se almacena con seguridad de nivel empresarial y se vincula de forma única a su cuenta."
+      },
+      "expenses": {
+        "title": "Visualización de Gastos",
+        "desc": "Análisis en tiempo real de sus gastos mensuales y anuales en toda su cartera."
+      },
+      "maintenance": {
+        "title": "Mantenimiento Inteligente",
+        "desc": "No se pierda ninguna reparación. Programe tareas, establezca prioridades y realice un seguimiento del progreso sin esfuerzo."
+      }
+    },
+    "footer": "© 2026 Shinigami House Test. Todos los derechos reservados. Gestión de propiedades profesional."
+  },
+  "auth": {
+    "login_title": "Bienvenido de nuevo",
+    "welcome_back": "Acceda a su panel de control de Shinigami House",
+    "continue_google": "Continuar con Google",
+    "terms_agreement": "Al continuar, acepta los",
+    "terms": "Términos de Servicio",
+    "privacy": "Política de Privacidad",
+    "tagline": "Protección de Propiedades Asegurada",
+    "login": "Iniciar Sesión",
+    "register": "Registrarse",
+    "logout": "Cerrar Sesión",
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "google_login": "Continuar con Google",
+    "no_account": "¿No tienes una cuenta?",
+    "have_account": "¿Ya tienes una cuenta?",
+    "welcome": "Bienvenido de nuevo",
+    "tagline": "El Death Note para la gestión de tus propiedades"
+  },
+  "dashboard": {
+    "title": "Panel de Control",
+    "total_properties": "Propiedades Totales",
+    "monthly_expenses": "Gastos Mensuales",
+    "pending_tasks": "Tareas Pendientes",
+    "under_maintenance": "Bajo Mantenimiento",
+    "recent_expenses": "Gastos Recientes",
+    "view_all": "Ver Todo",
+    "maintenance_schedule": "Agenda de Mantenimiento",
+    "manage": "Gestionar",
+    "clear_schedule": "Tu agenda está despejada.",
+    "unlock_scheduler": "Desbloquea la Agenda con Premium"
+  },
+  "properties": {
+    "title": "Propiedades",
+    "add_property": "Añadir Propiedad",
+    "no_properties": "No hay propiedades. ¡Añade la primera!",
+    "name": "Nombre de la Propiedad",
+    "address": "Dirección",
+    "type": "Tipo",
+    "units": "Unidades",
+    "status": "Estado",
+    "edit_property": "Editar Propiedad"
+  },
+  "expenses": {
+    "title": "Gastos",
+    "add_expense": "Añadir Gasto",
+    "no_expenses": "No hay gastos registrados.",
+    "amount": "Cantidad",
+    "category": "Categoría",
+    "date": "Fecha",
+    "property": "Propiedad",
+    "description": "Descripción",
+    "recent": "Gastos Recientes"
+  },
+  "maintenance": {
+    "title": "Mantenimiento",
+    "add_task": "Añadir Tarea",
+    "no_tasks": "No hay tareas de mantenimiento programadas.",
+    "priority": {
+      "high": "Alta",
+      "medium": "Media",
+      "low": "Baja"
+    },
+    "status": {
+      "pending": "Pendiente",
+      "in_progress": "En Progreso",
+      "completed": "Completada"
+    },
+    "premium_feature": "Función Premium",
+    "premium_desc": "La Agenda de Mantenimiento es una herramienta de grado empresarial exclusiva para miembros Premium.",
+    "upgrade_now": "Actualizar Ahora"
+  },
+  "membership": {
+    "title": "Plan de Membresía",
+    "choose_plan": "Elige tu plan",
+    "free": {
+      "name": "Versión Gratuita",
+      "price": "$0",
+      "period": "Para siempre",
+      "features": ["Propiedades Ilimitadas", "Seguimiento de Gastos", "Analítica Básica", "Soporte de la Comunidad"]
+    },
+    "premium": {
+      "name": "Plan Premium",
+      "price": "$19",
+      "period": "al mes",
+      "features": ["Todo lo Gratuito", "Agenda de Mantenimiento", "Informes ROI Avanzados", "Soporte Prioritario"]
+    },
+    "active_plan": "Plan Activo Actual",
+    "get_started": "Empezar",
+    "upgrade_success": "¡Actualizado a Premium con éxito!"
+  },
+  "profile": {
+    "title": "Ajustes de la Cuenta",
+    "description": "Gestione su perfil y preferencias.",
+    "personal_info": "Información Personal",
+    "name_label": "Nombre Completo",
+    "email_label": "Correo Electrónico",
+    "security": "Seguridad y Preferencias",
+    "notifications": "Notificaciones por Correo",
+    "notifications_desc": "Recibir resúmenes de mantenimiento próximo"
+  },
+  "admin": {
+    "title": "Centro de Control",
+    "subtitle": "Resumen global del sistema y gestión de usuarios.",
+    "stats": {
+      "total_users": "Usuarios Totales",
+      "premium_users": "Premium Activos",
+      "new_users": "Nuevos esta Semana",
+      "active_rate": "Tasa de Actividad"
+    },
+    "users": {
+      "table_title": "Registro de Usuarios",
+      "search_placeholder": "Buscar por nombre o correo...",
+      "columns": {
+        "user": "Usuario",
+        "plan": "Plan",
+        "role": "Rol",
+        "status": "Estado",
+        "joined": "Unido",
+        "actions": "Acciones"
+      },
+      "actions": {
+        "suspend": "Suspender",
+        "reactivate": "Reactivar",
+        "make_admin": "Hacer Admin",
+        "revoke_admin": "Quitar Admin",
+        "delete": "Eliminar",
+        "delete_confirm": "¿Está seguro de que desea eliminar este usuario? Esta acción es irreversible."
+      }
+    }
+  }
+}

@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  shinigami-house:
+    build: .
+    container_name: shinigami-app
+    ports:
+      - "3000:3000"
+    volumes:
+      - shinigami_db_data:/app/data
+      - shinigami_file_uploads:/app/uploads
+    environment:
+      # CRITICAL: Change these for production!
+      - JWT_SECRET=YOUR_SECURE_JWT_SECRET_PLACEHOLDER
+      - ADMIN_EMAIL=markostamaki23@gmail.com
+      - ADMIN_PASSWORD=YOUR_SECURE_ADMIN_PASSWORD_PLACEHOLDER
+      
+      - INTRANET_MODE=true
+      - DATABASE_URL=/app/data/shinigami.db
+      - UPLOAD_DIR=/app/uploads
+      - VITE_APP_URL=http://localhost:3000
+    restart: always
+
+volumes:
+  shinigami_db_data:
+  shinigami_file_uploads:
