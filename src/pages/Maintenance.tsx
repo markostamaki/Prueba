@@ -68,7 +68,7 @@ export default function Maintenance() {
 
     await addRecord('maintenance_tasks', {
       ...formData,
-      userId: user.id
+      userId: user.uid
     });
 
     setIsModalOpen(false);

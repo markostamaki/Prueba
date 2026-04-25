@@ -35,7 +35,7 @@ export default function Expenses() {
     
     await addRecord('expenses', {
       ...formData,
-      userId: user.id,
+      userId: user.uid,
       amount: Number(formData.amount)
     });
 

@@ -175,13 +175,6 @@ export default function Admin() {
           </h2>
           <div className="flex gap-2">
             <button 
-              onClick={() => window.open('/api/admin/backup/db', '_blank')}
-              className="flex items-center gap-2 px-4 h-10 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-white transition-all shadow-sm"
-            >
-              <Download className="w-4 h-4" />
-              Backup DB
-            </button>
-            <button 
               onClick={exportCSV}
               className="flex items-center gap-2 px-4 h-10 border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-white transition-all shadow-sm"
             >
@@ -279,7 +272,7 @@ export default function Admin() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
-                        {u.id !== user?.id && (
+                        {u.uid !== user?.uid && (
                           <>
                             <button 
                               onClick={() => handleAction(u.id, 'toggle_plan')}

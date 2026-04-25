@@ -1,0 +1,89 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "System user document",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "plan": { "type": "string", "enum": ["free", "premium"] },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "status": { "type": "string", "enum": ["active", "suspended"] },
+        "language": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "plan", "role", "status", "createdAt"]
+    },
+    "Property": {
+      "title": "Property",
+      "description": "Property managed by the user",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string" },
+        "name": { "type": "string" },
+        "address": { "type": "string" },
+        "type": { "type": "string", "enum": ["House", "Apartment", "Condo", "Commercial"] },
+        "monthlyRent": { "type": "number" },
+        "status": { "type": "string", "enum": ["occupied", "vacant", "maintenance"] },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["ownerId", "name", "address", "type", "status", "createdAt"]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "Financial expense linked to a property",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "propertyId": { "type": "string" },
+        "category": { "type": "string" },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "format": "date" },
+        "description": { "type": "string" },
+        "receiptUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "propertyId", "category", "amount", "date", "createdAt"]
+    },
+    "MaintenanceTask": {
+      "title": "Maintenance Task",
+      "description": "Scheduled maintenance activity",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "propertyId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "scheduledDate": { "type": "string", "format": "date" },
+        "priority": { "type": "string", "enum": ["low", "medium", "high"] },
+        "status": { "type": "string", "enum": ["pending", "in_progress", "completed"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "propertyId", "title", "scheduledDate", "priority", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "properties/{propertyId}": {
+      "schema": "Property",
+      "description": "Managed properties"
+    },
+    "expenses/{expenseId}": {
+      "schema": "Expense",
+      "description": "Expense records"
+    },
+    "maintenance_tasks/{taskId}": {
+      "schema": "MaintenanceTask",
+      "description": "Maintenance schedule"
+    }
+  }
+}

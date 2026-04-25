@@ -1,17 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { User, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
+import { auth, db } from './firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import i18n from '../i18n/config';
-import { apiRequest } from './api';
-
-interface User {
-  id: string;
-  email: string;
-  displayName?: string;
-  photoURL?: string;
-  role: 'user' | 'admin';
-  plan: 'free' | 'premium';
-  status: 'active' | 'suspended';
-  language: string;
-}
 
 interface AuthContextType {
   user: User | null;
@@ -20,8 +11,7 @@ interface AuthContextType {
   status: 'active' | 'suspended';
   language: string;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, displayName?: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   upgradePlan: (plan: 'free' | 'premium') => Promise<void>;
   setLanguage: (lang: string) => Promise<void>;
@@ -31,103 +21,121 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [plan, setPlan] = useState<'free' | 'premium'>('free');
+  const [role, setRole] = useState<'user' | 'admin'>('user');
+  const [status, setStatus] = useState<'active' | 'suspended'>('active');
+  const [language, setLanguageState] = useState(i18n.language || 'en');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('shinigami_token');
-    const storedUser = localStorage.getItem('shinigami_user');
-    
-    if (token && storedUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-        if (parsedUser.language) {
-          i18n.changeLanguage(parsedUser.language);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Sync user to Firestore
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+        
+        if (!userSnap.exists()) {
+          const isInitialAdmin = user.email === 'markostamaki23@gmail.com';
+          const defaultData = {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL,
+            plan: 'free',
+            role: isInitialAdmin ? 'admin' : 'user',
+            status: 'active',
+            language: i18n.language || 'en',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+          await setDoc(userRef, defaultData);
+          setPlan('free');
+          setRole(defaultData.role as 'user' | 'admin');
+          setStatus('active');
+          setLanguageState(defaultData.language);
+        } else {
+          const data = userSnap.data();
+          const isAdminEmail = user.email === 'markostamaki23@gmail.com';
+          
+          if (isAdminEmail && data.role !== 'admin') {
+            await setDoc(userRef, { role: 'admin', updatedAt: new Date().toISOString() }, { merge: true });
+            setRole('admin');
+          } else {
+            setRole(data.role || 'user');
+          }
+
+          setPlan(data.plan || 'free');
+          setStatus(data.status || 'active');
+          if (data.language) {
+            setLanguageState(data.language);
+            i18n.changeLanguage(data.language);
+          }
+          
+          if (data.status === 'suspended') {
+            await signOut(auth);
+            setUser(null);
+            setLoading(false);
+            return;
+          }
         }
-      } catch (e) {
-        localStorage.removeItem('shinigami_token');
-        localStorage.removeItem('shinigami_user');
+        setUser(user);
+      } else {
+        setUser(null);
+        setPlan('free');
+        setRole('user');
+        setStatus('active');
       }
-    }
-    setLoading(false);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const login = async (email: string, password: string) => {
-    const data = await apiRequest('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-    
-    localStorage.setItem('shinigami_token', data.token);
-    localStorage.setItem('shinigami_user', JSON.stringify(data.user));
-    setUser(data.user);
-    if (data.user.language) {
-      i18n.changeLanguage(data.user.language);
+  const loginWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error('Login error:', error);
     }
-  };
-
-  const register = async (email: string, password: string, displayName?: string) => {
-    const data = await apiRequest('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({ email, password, displayName }),
-    });
-    
-    localStorage.setItem('shinigami_token', data.token);
-    localStorage.setItem('shinigami_user', JSON.stringify(data.user));
-    setUser(data.user);
   };
 
   const logout = async () => {
-    localStorage.removeItem('shinigami_token');
-    localStorage.removeItem('shinigami_user');
-    setUser(null);
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   const upgradePlan = async (newPlan: 'free' | 'premium') => {
     if (!user) return;
     try {
-      // In self-hosted mode, plan upgrade might be an admin action 
-      // or a profile update if we want to allow self-upgrade for testing
-      const updatedUser = await apiRequest(`/admin/users/${user.id}`, {
-        method: 'PUT',
-        body: JSON.stringify({ plan: newPlan }),
-      });
-      setUser(updatedUser);
-      localStorage.setItem('shinigami_user', JSON.stringify(updatedUser));
+      const userRef = doc(db, 'users', user.uid);
+      await setDoc(userRef, { plan: newPlan, updatedAt: new Date().toISOString() }, { merge: true });
+      setPlan(newPlan);
     } catch (error) {
       console.error('Upgrade error:', error);
     }
   };
 
   const setLanguage = async (lang: string) => {
-    if (!user) return;
-    try {
-      const updatedUser = await apiRequest(`/admin/users/${user.id}`, {
-        method: 'PUT',
-        body: JSON.stringify({ language: lang }),
-      });
-      setUser(updatedUser);
-      localStorage.setItem('shinigami_user', JSON.stringify(updatedUser));
-      i18n.changeLanguage(lang);
-    } catch (error) {
-      console.error('Language sync error:', error);
+    setLanguageState(lang);
+    i18n.changeLanguage(lang);
+    if (user) {
+      try {
+        const userRef = doc(db, 'users', user.uid);
+        await setDoc(userRef, { language: lang, updatedAt: new Date().toISOString() }, { merge: true });
+      } catch (error) {
+        console.error('Language sync error:', error);
+      }
+    } else {
+      localStorage.setItem('i18nextLng', lang);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      plan: user?.plan || 'free', 
-      role: user?.role || 'user', 
-      status: user?.status || 'active', 
-      language: user?.language || 'en', 
-      loading, 
-      login, 
-      register, 
-      logout, 
-      upgradePlan, 
-      setLanguage 
-    }}>
+    <AuthContext.Provider value={{ user, plan, role, status, language, loading, loginWithGoogle, logout, upgradePlan, setLanguage }}>
       {!loading && children}
     </AuthContext.Provider>
   );

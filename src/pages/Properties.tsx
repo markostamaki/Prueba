@@ -29,7 +29,7 @@ export default function Properties() {
 
     const propertyData = {
       ...formData,
-      ownerId: user.id,
+      ownerId: user.uid,
       monthlyRent: Number(formData.monthlyRent)
     };
 
