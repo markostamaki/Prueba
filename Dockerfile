@@ -25,9 +25,10 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server.ts ./server.ts
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
+COPY --from=builder /app/firebase-applet-config.json ./firebase-applet-config.json
 
-# Instalar solo dependencias de producción (y tsx para ejecutar el server.ts si no quieres compilarlo a CJS)
-RUN npm install --omit=dev && npm install -g tsx
+# Instalar solo dependencias de producción
+RUN npm install --omit=dev
 
 # Exponer el puerto que usa la app (por defecto 3000 o el que indique la variable PORT)
 EXPOSE 3000
@@ -37,4 +38,4 @@ ENV NODE_ENV=production
 ENV PORT=3000
 
 # Comando para iniciar la aplicación
-CMD ["tsx", "server.ts"]
+CMD ["npm", "start"]
