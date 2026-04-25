@@ -1,0 +1,12 @@
+services:
+  app:
+    build: .
+    container_name: property-management-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      # Añade aquí tus variables de Firebase u otras que tengas en .env
+      # - FIREBASE_API_KEY=${FIREBASE_API_KEY}
+    restart: always
