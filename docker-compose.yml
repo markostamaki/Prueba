@@ -2,14 +2,6 @@ services:
   app:
     build:
       context: .
-      args:
-        - VITE_FIREBASE_API_KEY=${VITE_FIREBASE_API_KEY}
-        - VITE_FIREBASE_AUTH_DOMAIN=${VITE_FIREBASE_AUTH_DOMAIN}
-        - VITE_FIREBASE_PROJECT_ID=${VITE_FIREBASE_PROJECT_ID}
-        - VITE_FIREBASE_STORAGE_BUCKET=${VITE_FIREBASE_STORAGE_BUCKET}
-        - VITE_FIREBASE_MESSAGING_SENDER_ID=${VITE_FIREBASE_MESSAGING_SENDER_ID}
-        - VITE_FIREBASE_APP_ID=${VITE_FIREBASE_APP_ID}
-        - VITE_FIREBASE_MEASUREMENT_ID=${VITE_FIREBASE_MEASUREMENT_ID}
     container_name: property-management-app
     ports:
       - "${PORT:-3000}:${PORT:-3000}"
@@ -18,4 +10,11 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=${PORT:-3000}
+      - JWT_SECRET=${JWT_SECRET:-shinigami_secret_key_change_me_in_production}
+      - DATABASE_URL=/app/data/shinigami.db
+    volumes:
+      - ./data:/app/data
     restart: always
+
+volumes:
+  data:

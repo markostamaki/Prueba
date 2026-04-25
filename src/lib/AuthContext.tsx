@@ -1,8 +1,14 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
-import { auth, db } from './firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
 import i18n from '../i18n/config';
+
+interface User {
+  id: string;
+  email: string;
+  full_name: string;
+  role: 'user' | 'admin';
+  plan: 'free' | 'premium';
+  status: 'active' | 'suspended';
+}
 
 interface AuthContextType {
   user: User | null;
@@ -11,7 +17,9 @@ interface AuthContextType {
   status: 'active' | 'suspended';
   language: string;
   loading: boolean;
-  loginWithGoogle: () => Promise<void>;
+  error: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string, fullName: string) => Promise<void>;
   logout: () => Promise<void>;
   upgradePlan: (plan: 'free' | 'premium') => Promise<void>;
   setLanguage: (lang: string) => Promise<void>;
@@ -21,121 +29,125 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [plan, setPlan] = useState<'free' | 'premium'>('free');
-  const [role, setRole] = useState<'user' | 'admin'>('user');
-  const [status, setStatus] = useState<'active' | 'suspended'>('active');
-  const [language, setLanguageState] = useState(i18n.language || 'en');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [language, setLanguageState] = useState(i18n.language || 'en');
+
+  // Derived states for backward compatibility with existing components
+  const plan = user?.plan || 'free';
+  const role = user?.role || 'user';
+  const status = user?.status || 'active';
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        // Sync user to Firestore
-        const userRef = doc(db, 'users', user.uid);
-        const userSnap = await getDoc(userRef);
-        
-        if (!userSnap.exists()) {
-          const isInitialAdmin = user.email === 'markostamaki23@gmail.com';
-          const defaultData = {
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName,
-            photoURL: user.photoURL,
-            plan: 'free',
-            role: isInitialAdmin ? 'admin' : 'user',
-            status: 'active',
-            language: i18n.language || 'en',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          };
-          await setDoc(userRef, defaultData);
-          setPlan('free');
-          setRole(defaultData.role as 'user' | 'admin');
-          setStatus('active');
-          setLanguageState(defaultData.language);
-        } else {
-          const data = userSnap.data();
-          const isAdminEmail = user.email === 'markostamaki23@gmail.com';
-          
-          if (isAdminEmail && data.role !== 'admin') {
-            await setDoc(userRef, { role: 'admin', updatedAt: new Date().toISOString() }, { merge: true });
-            setRole('admin');
-          } else {
-            setRole(data.role || 'user');
-          }
-
-          setPlan(data.plan || 'free');
-          setStatus(data.status || 'active');
-          if (data.language) {
-            setLanguageState(data.language);
-            i18n.changeLanguage(data.language);
-          }
-          
-          if (data.status === 'suspended') {
-            await signOut(auth);
-            setUser(null);
-            setLoading(false);
-            return;
-          }
-        }
-        setUser(user);
-      } else {
-        setUser(null);
-        setPlan('free');
-        setRole('user');
-        setStatus('active');
+    const checkAuth = async () => {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        setLoading(false);
+        return;
       }
-      setLoading(false);
-    });
 
-    return () => unsubscribe();
+      try {
+        const response = await fetch('/api/auth/me', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const userData = await response.json();
+          setUser(userData);
+          if (userData.language) {
+            setLanguageState(userData.language);
+            i18n.changeLanguage(userData.language);
+          }
+        } else {
+          localStorage.removeItem('auth_token');
+        }
+      } catch (err) {
+        console.error('Auth check error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
   }, []);
 
-  const loginWithGoogle = async () => {
-    const provider = new GoogleAuthProvider();
+  const login = async (email: string, password: string) => {
+    setError(null);
     try {
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error('Login error:', error);
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Login failed');
+
+      localStorage.setItem('auth_token', data.token);
+      setUser(data.user);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  const register = async (email: string, password: string, fullName: string) => {
+    setError(null);
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, full_name: fullName })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Registration failed');
+
+      localStorage.setItem('auth_token', data.token);
+      setUser(data.user);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
     }
   };
 
   const logout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+    localStorage.removeItem('auth_token');
+    setUser(null);
   };
 
   const upgradePlan = async (newPlan: 'free' | 'premium') => {
+    // For now, this is just local state as we haven't implemented the update API yet
     if (!user) return;
-    try {
-      const userRef = doc(db, 'users', user.uid);
-      await setDoc(userRef, { plan: newPlan, updatedAt: new Date().toISOString() }, { merge: true });
-      setPlan(newPlan);
-    } catch (error) {
-      console.error('Upgrade error:', error);
-    }
+    setUser({ ...user, plan: newPlan });
   };
 
   const setLanguage = async (lang: string) => {
     setLanguageState(lang);
     i18n.changeLanguage(lang);
-    if (user) {
-      try {
-        const userRef = doc(db, 'users', user.uid);
-        await setDoc(userRef, { language: lang, updatedAt: new Date().toISOString() }, { merge: true });
-      } catch (error) {
-        console.error('Language sync error:', error);
-      }
-    } else {
+    if (!user) {
       localStorage.setItem('i18nextLng', lang);
     }
+    // API logic for persisting language could be added here
   };
 
   return (
-    <AuthContext.Provider value={{ user, plan, role, status, language, loading, loginWithGoogle, logout, upgradePlan, setLanguage }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      plan, 
+      role, 
+      status, 
+      language, 
+      loading, 
+      error, 
+      login, 
+      register, 
+      logout, 
+      upgradePlan, 
+      setLanguage 
+    }}>
       {!loading && children}
     </AuthContext.Provider>
   );

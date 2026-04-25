@@ -14,7 +14,7 @@ import {
   UserPlus,
   Download
 } from 'lucide-react';
-import { useCollection, updateRecord, deleteRecord } from '../hooks/useFirestore';
+import { useLocalCollection, updateLocalRecord, deleteLocalRecord } from '../hooks/useLocalData';
 import { useAuth } from '../lib/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { format } from 'date-fns';
@@ -26,9 +26,9 @@ import { Navigate } from 'react-router-dom';
 export default function Admin() {
   const { user, role, language } = useAuth();
   const { t } = useTranslation();
-  const { data: users, loading: usersLoading } = useCollection<any>('users', [], true, true);
-  const { data: allProperties } = useCollection<any>('properties', [], true, true);
-  const { data: allExpenses } = useCollection<any>('expenses', [], true, true);
+  const { data: users, loading: usersLoading, refresh: refreshUsers } = useLocalCollection<any>('admin/users');
+  const { data: allProperties } = useLocalCollection<any>('admin/properties');
+  const { data: allExpenses } = useLocalCollection<any>('admin/expenses');
   const [searchTerm, setSearchTerm] = useState('');
 
   const loading = usersLoading;
@@ -40,16 +40,16 @@ export default function Admin() {
   const locale = language.startsWith('es') ? es : enUS;
   const dateFormat = language.startsWith('es') ? 'dd/MM/yyyy' : 'MMM d, yyyy';
 
-  const filteredUsers = users.filter(u => 
-    u.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredUsers = users.filter((u: any) => 
+    u.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const stats = {
     total: users.length,
-    premium: users.filter(u => u.plan === 'premium').length,
-    active: users.filter(u => u.status === 'active').length,
-    newThisWeek: users.filter(u => {
+    premium: users.filter((u: any) => u.plan === 'premium').length,
+    active: users.filter((u: any) => u.status === 'active').length,
+    newThisWeek: users.filter((u: any) => {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
       return new Date(u.createdAt) > weekAgo;
@@ -65,14 +65,19 @@ export default function Admin() {
 
   const handleAction = async (id: string, action: 'suspend' | 'reactivate' | 'make_admin' | 'revoke_admin' | 'delete' | 'toggle_plan') => {
     try {
+      const token = localStorage.getItem('auth_token');
       if (action === 'delete') {
         if (window.confirm(t('admin.users.actions.delete_confirm'))) {
-          await deleteRecord('users', id);
+          await fetch(`/api/admin/users/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          refreshUsers();
         }
         return;
       }
 
-      const targetUser = users.find(u => u.id === id);
+      const targetUser = users.find((u: any) => u.id === id);
       if (!targetUser) return;
 
       let updates = {};
@@ -82,7 +87,15 @@ export default function Admin() {
       if (action === 'revoke_admin') updates = { role: 'user' };
       if (action === 'toggle_plan') updates = { plan: targetUser.plan === 'premium' ? 'free' : 'premium' };
 
-      await updateRecord('users', id, updates);
+      await fetch(`/api/admin/users/${id}`, {
+        method: 'PUT',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify(updates)
+      });
+      refreshUsers();
     } catch (error) {
       console.error('Admin action failed:', error);
     }
@@ -90,8 +103,8 @@ export default function Admin() {
 
   const exportCSV = () => {
     const headers = ['Name', 'Email', 'Plan', 'Role', 'Status', 'Joined'];
-    const rows = filteredUsers.map(u => [
-      u.displayName,
+    const rows = filteredUsers.map((u: any) => [
+      u.fullName,
       u.email,
       u.plan,
       u.role,
@@ -228,11 +241,11 @@ export default function Admin() {
                           <img src={u.photoURL} className="w-8 h-8 rounded-full border border-gray-100 shadow-sm" alt="" />
                         ) : (
                           <div className="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center font-bold text-xs">
-                            {u.displayName?.[0] || 'U'}
+                            {u.fullName?.[0] || 'U'}
                           </div>
                         )}
                         <div>
-                          <p className="text-sm font-bold text-gray-900">{u.displayName}</p>
+                          <p className="text-sm font-bold text-gray-900">{u.fullName}</p>
                           <div className="flex items-center gap-2">
                             <p className="text-xs text-gray-500 font-mono">{u.email}</p>
                             <span className="text-[10px] bg-gray-100 text-gray-400 px-1.5 rounded">P: {userStats(u.id).properties}</span>
@@ -272,7 +285,7 @@ export default function Admin() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
-                        {u.uid !== user?.uid && (
+                        {u.id !== user?.id && (
                           <>
                             <button 
                               onClick={() => handleAction(u.id, 'toggle_plan')}

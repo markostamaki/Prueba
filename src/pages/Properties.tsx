@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Building2, Plus, Search, MapPin, MoreVertical, Edit2, Trash2, X } from 'lucide-react';
-import { useCollection, addRecord, deleteRecord, updateRecord } from '../hooks/useFirestore';
+import { useLocalCollection, addLocalRecord, deleteLocalRecord, updateLocalRecord } from '../hooks/useLocalData';
 import { useAuth } from '../lib/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 export default function Properties() {
   const { user } = useAuth();
   const { t } = useTranslation();
-  const { data: properties, loading } = useCollection<any>('properties');
+  const { data: properties, loading, refresh } = useLocalCollection<any>('properties');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [editingProperty, setEditingProperty] = useState<any>(null);
@@ -29,19 +29,22 @@ export default function Properties() {
 
     const propertyData = {
       ...formData,
-      ownerId: user.uid,
       monthlyRent: Number(formData.monthlyRent)
     };
 
-    if (editingProperty) {
-      await updateRecord('properties', editingProperty.id, propertyData);
-    } else {
-      await addRecord('properties', propertyData);
+    try {
+      if (editingProperty) {
+        await updateLocalRecord('properties', editingProperty.id, propertyData);
+      } else {
+        await addLocalRecord('properties', propertyData);
+      }
+      refresh();
+      setIsAddModalOpen(false);
+      setEditingProperty(null);
+      setFormData({ name: '', address: '', type: 'Apartment', monthlyRent: '', status: 'vacant', notes: '' });
+    } catch (err) {
+      console.error('Error saving property:', err);
     }
-
-    setIsAddModalOpen(false);
-    setEditingProperty(null);
-    setFormData({ name: '', address: '', type: 'Apartment', monthlyRent: '', status: 'vacant', notes: '' });
   };
 
   const handleEdit = (prop: any) => {
@@ -59,7 +62,12 @@ export default function Properties() {
 
   const handleDelete = async (id: string) => {
     if (confirm(t('common.confirm_delete') || 'Are you sure?')) {
-      await deleteRecord('properties', id);
+      try {
+        await deleteLocalRecord('properties', id);
+        refresh();
+      } catch (err) {
+        console.error('Error deleting property:', err);
+      }
     }
   };
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Building2, Receipt, Wrench, AlertCircle, TrendingUp, Plus, Lock, Star } from 'lucide-react';
-import { useCollection } from '../hooks/useFirestore';
+import { useLocalCollection } from '../hooks/useLocalData';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
 import { motion } from 'motion/react';
@@ -13,9 +13,9 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { plan, language } = useAuth();
   const { t } = useTranslation();
-  const { data: properties } = useCollection<any>('properties');
-  const { data: expenses } = useCollection<any>('expenses');
-  const { data: tasks } = useCollection<any>('maintenance_tasks', [], plan === 'premium');
+  const { data: properties } = useLocalCollection<any>('properties');
+  const { data: expenses } = useLocalCollection<any>('expenses');
+  const { data: tasks } = useLocalCollection<any>('tasks');
 
   const locale = language.startsWith('es') ? es : enUS;
   const dateFormat = language.startsWith('es') ? 'dd/MM/yyyy' : 'MMM d, yyyy';

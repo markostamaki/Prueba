@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Receipt, Plus, Search, Filter, Trash2, X, Download } from 'lucide-react';
-import { useCollection, addRecord, deleteRecord } from '../hooks/useFirestore';
+import { useLocalCollection, addLocalRecord, deleteLocalRecord } from '../hooks/useLocalData';
 import { useAuth } from '../lib/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { format } from 'date-fns';
@@ -11,8 +11,8 @@ import { useTranslation } from 'react-i18next';
 export default function Expenses() {
   const { user, language } = useAuth();
   const { t } = useTranslation();
-  const { data: expenses, loading } = useCollection<any>('expenses');
-  const { data: properties } = useCollection<any>('properties');
+  const { data: expenses, loading, refresh } = useLocalCollection<any>('expenses');
+  const { data: properties } = useLocalCollection<any>('properties');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -33,20 +33,34 @@ export default function Expenses() {
     e.preventDefault();
     if (!user) return;
     
-    await addRecord('expenses', {
-      ...formData,
-      userId: user.uid,
-      amount: Number(formData.amount)
-    });
+    try {
+      await addLocalRecord('expenses', {
+        ...formData,
+        amount: Number(formData.amount)
+      });
+      refresh();
+      setIsModalOpen(false);
+      setFormData({
+        propertyId: '',
+        category: 'Repairs',
+        amount: '',
+        date: format(new Date(), 'yyyy-MM-dd'),
+        description: ''
+      });
+    } catch (err) {
+      console.error('Error saving expense:', err);
+    }
+  };
 
-    setIsModalOpen(false);
-    setFormData({
-      propertyId: '',
-      category: 'Repairs',
-      amount: '',
-      date: format(new Date(), 'yyyy-MM-dd'),
-      description: ''
-    });
+  const handleDelete = async (id: string) => {
+    if (confirm(t('common.confirm_delete') || 'Are you sure?')) {
+      try {
+        await deleteLocalRecord('expenses', id);
+        refresh();
+      } catch (err) {
+        console.error('Error deleting expense:', err);
+      }
+    }
   };
 
   const filteredExpenses = expenses.filter(e => 
@@ -134,7 +148,7 @@ export default function Expenses() {
                       ${Number(exp.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button onClick={() => deleteRecord('expenses', exp.id)} className="text-gray-300 hover:text-red-600 transition-colors">
+                      <button onClick={() => handleDelete(exp.id)} className="text-gray-300 hover:text-red-600 transition-colors">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </td>
