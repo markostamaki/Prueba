@@ -41,7 +41,7 @@ export default function Admin() {
   const dateFormat = language.startsWith('es') ? 'dd/MM/yyyy' : 'MMM d, yyyy';
 
   const filteredUsers = users.filter((u: any) => 
-    u.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     u.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -52,7 +52,7 @@ export default function Admin() {
     newThisWeek: users.filter((u: any) => {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
-      return new Date(u.createdAt) > weekAgo;
+      return new Date(u.created_at) > weekAgo;
     }).length
   };
 
@@ -104,12 +104,12 @@ export default function Admin() {
   const exportCSV = () => {
     const headers = ['Name', 'Email', 'Plan', 'Role', 'Status', 'Joined'];
     const rows = filteredUsers.map((u: any) => [
-      u.fullName,
+      u.full_name,
       u.email,
       u.plan,
       u.role,
       u.status,
-      u.createdAt
+      u.created_at
     ]);
     
     const csvContent = [
@@ -241,11 +241,11 @@ export default function Admin() {
                           <img src={u.photoURL} className="w-8 h-8 rounded-full border border-gray-100 shadow-sm" alt="" />
                         ) : (
                           <div className="w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center font-bold text-xs">
-                            {u.fullName?.[0] || 'U'}
+                            {u.full_name?.[0] || 'U'}
                           </div>
                         )}
                         <div>
-                          <p className="text-sm font-bold text-gray-900">{u.fullName}</p>
+                          <p className="text-sm font-bold text-gray-900">{u.full_name}</p>
                           <div className="flex items-center gap-2">
                             <p className="text-xs text-gray-500 font-mono">{u.email}</p>
                             <span className="text-[10px] bg-gray-100 text-gray-400 px-1.5 rounded">P: {userStats(u.id).properties}</span>

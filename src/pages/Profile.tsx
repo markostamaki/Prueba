@@ -41,11 +41,11 @@ export default function Profile() {
                   "w-24 h-24 rounded-2xl flex items-center justify-center text-4xl font-bold border-4 border-white shadow-lg",
                   plan === 'premium' ? "bg-amber-50 text-amber-600 ring-4 ring-amber-100" : "bg-red-50 text-red-600"
                 )}>
-                  {user?.fullName?.[0] || user?.email?.[0].toUpperCase()}
+                  {user?.full_name?.[0] || user?.email?.[0].toUpperCase()}
                 </div>
               )}
             </div>
-            <h2 className="text-xl font-bold mb-1">{user?.fullName || 'Property Manager'}</h2>
+            <h2 className="text-xl font-bold mb-1">{user?.full_name || 'Property Manager'}</h2>
             <p className="text-sm text-gray-500 mb-6">{user?.email}</p>
             
             <div className="flex flex-col gap-2">
@@ -77,7 +77,7 @@ export default function Profile() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">{t('profile.name_label')}</label>
-                  <p className="text-sm text-gray-900 bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">{user?.fullName || 'N/A'}</p>
+                  <p className="text-sm text-gray-900 bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">{user?.full_name || 'N/A'}</p>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">{t('profile.email_label')}</label>
