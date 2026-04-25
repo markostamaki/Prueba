@@ -4,8 +4,6 @@ services:
     container_name: property-management-app
     ports:
       - "${PORT:-3000}:${PORT:-3000}"
-    env_file:
-      - .env
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=${PORT:-3000}
